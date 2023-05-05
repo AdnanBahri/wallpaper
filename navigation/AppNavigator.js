@@ -1,9 +1,12 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "../screens/HomeScreen";
-import DetailsScreen from "../screens/DetailsScreen";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import FullScreen from "../screens/FullScreen";
 import { Ionicons } from "@expo/vector-icons";
+import CategoriesScreen from "../screens/CategoriesScreen";
+import BookmarkScreen from "../screens/BookmarkScreen";
+import SettingsScreen from "../screens/SettingsScreen";
+import WallpaperScreen from "../screens/WallpaperScreen";
 
 const MainStack = createStackNavigator();
 
@@ -16,7 +19,7 @@ const HomeStack = () => (
     }}
   >
     <MainStack.Screen name="HomeScreen" component={HomeScreen} />
-    <MainStack.Screen name="FullScreen" component={FullScreen} />
+    <MainStack.Screen name="FullScreen" component={WallpaperScreen} />
   </MainStack.Navigator>
 );
 
@@ -46,7 +49,7 @@ export const AppNavigator = () => (
     />
     <BottomTabs.Screen
       name="Categories"
-      component={DetailsScreen}
+      component={CategoriesScreen}
       options={{
         tabBarIcon: ({ focused, tintColor }) => (
           <Ionicons
@@ -58,8 +61,8 @@ export const AppNavigator = () => (
       }}
     />
     <BottomTabs.Screen
-      name="Details"
-      component={DetailsScreen}
+      name="Bookmark"
+      component={BookmarkScreen}
       options={{
         tabBarIcon: ({ focused, tintColor }) => (
           <Ionicons
@@ -72,7 +75,7 @@ export const AppNavigator = () => (
     />
     <BottomTabs.Screen
       name="Settings"
-      component={DetailsScreen}
+      component={SettingsScreen}
       options={{
         tabBarIcon: ({ focused, tintColor }) => (
           <Ionicons

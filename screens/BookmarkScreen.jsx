@@ -1,65 +1,38 @@
 import {
+  Dimensions,
   FlatList,
-  StyleSheet,
   Image,
-  View,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  Dimensions,
+  View,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { CommonActions } from "@react-navigation/native";
-import Dialog from "../components/Dialog";
+import { CommonActions, useIsFocused } from "@react-navigation/native";
+import { useLocaleStoarge } from "../hooks/useLocalStorage";
 
-const images = [
-  {
-    id: 1,
-    url: "https://images.wallpaperscraft.com/image/single/trees_lake_ice_918498_1080x1920.jpg",
-  },
-  {
-    id: 2,
-    url: "https://images.wallpaperscraft.com/image/single/coast_sea_waves_918477_1080x1920.jpg",
-  },
-  {
-    id: 3,
-    url: "https://images.wallpaperscraft.com/image/single/road_bridge_river_918481_1080x1920.jpg",
-  },
-  {
-    id: 4,
-    url: "https://images.wallpaperscraft.com/image/single/waterfall_rocks_stones_918460_1080x1920.jpg",
-  },
-  {
-    id: 5,
-    url: "https://images.wallpaperscraft.com/image/single/lupine_leaves_drops_918456_1080x1920.jpg",
-  },
-  {
-    id: 6,
-    url: "https://images.wallpaperscraft.com/image/single/road_forest_northern_lights_918442_1080x1920.jpg",
-  },
-  {
-    id: 7,
-    url: "https://images.wallpaperscraft.com/image/single/grass_trees_field_918374_1080x1920.jpg",
-  },
-  {
-    id: 8,
-    url: "https://images.wallpaperscraft.com/image/single/boat_coast_sea_918377_1080x1920.jpg",
-  },
-  {
-    id: 9,
-    url: "https://images.wallpaperscraft.com/image/single/boat_masts_sails_918362_1080x1920.jpg",
-  },
-];
+// const images = [
+//   "https://images.wallpaperscraft.com/image/single/trees_lake_ice_918498_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/coast_sea_waves_918477_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/road_bridge_river_918481_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/waterfall_rocks_stones_918460_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/lupine_leaves_drops_918456_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/road_forest_northern_lights_918442_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/grass_trees_field_918374_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/boat_coast_sea_918377_1080x1920.jpg",
+//   "https://images.wallpaperscraft.com/image/single/boat_masts_sails_918362_1080x1920.jpg",
+// ];
 
 const { width, height } = Dimensions.get("screen");
 const IMAGE_SIZE = 80;
 const SPACING = 10;
 
-const FullScreen = ({ route: { params }, navigation }) => {
-  const [activePosition, setActivePosition] = useState(
-    images.findIndex((item) => item.id === params.item.id)
-  );
-  const [isVisible, setIsVisible] = useState(false);
+const BookmarkScreen = ({ navigation }) => {
+  const isFocused = useIsFocused();
+  const [activePosition, setActivePosition] = useState(0);
+  const [bookmarks, setBookmarks] = useState([]);
+  const { retreiveWallpapers } = useLocaleStoarge();
   const topRef = useRef();
   const thumbRef = useRef();
   const scrollToActivePosition = (index) => {
@@ -75,9 +48,26 @@ const FullScreen = ({ route: { params }, navigation }) => {
       });
     }
   };
+
   useEffect(() => {
-    scrollToActivePosition(activePosition);
-  }, []);
+    const check = async () => {
+      const data = await retreiveWallpapers();
+      if (data !== null && data.length > 0) setBookmarks(data);
+    };
+    check();
+  }, [isFocused]);
+
+  if (bookmarks.length === 0)
+    return (
+      <View
+        style={[
+          styles.container,
+          { flex: 1, alignItems: "center", justifyContent: "center" },
+        ]}
+      >
+        <Text style={styles.text}>You have no Wallpaper Saved</Text>
+      </View>
+    );
   return (
     <View style={styles.container}>
       <View style={styles.toolbar}>
@@ -88,12 +78,12 @@ const FullScreen = ({ route: { params }, navigation }) => {
         </TouchableOpacity>
         <Text style={styles.text}>Wallpaper</Text>
         <TouchableOpacity onPress={() => {}}>
-          <Ionicons name={"bookmark-outline"} size={25} color={"#fb8500"} />
+          <Ionicons name={"search-outline"} size={25} color={"#fb8500"} />
         </TouchableOpacity>
       </View>
       <FlatList
         ref={topRef}
-        data={images}
+        data={bookmarks}
         keyExtractor={(_, index) => index.toString()}
         onMomentumScrollBegin={(ev) =>
           scrollToActivePosition(
@@ -104,18 +94,18 @@ const FullScreen = ({ route: { params }, navigation }) => {
           return (
             <View style={{ width, height }}>
               <Image
-                source={{ uri: item.url }}
+                source={{ uri: item }}
                 style={[StyleSheet.absoluteFillObject]}
               />
             </View>
           );
         }}
-        pagingEnabled
         horizontal
         showsHorizontalScrollIndicator={false}
+        pagingEnabled
       />
       <FlatList
-        data={images}
+        data={bookmarks}
         ref={thumbRef}
         contentContainerStyle={{ paddingHorizontal: SPACING }}
         style={{ position: "absolute", bottom: IMAGE_SIZE }}
@@ -124,7 +114,7 @@ const FullScreen = ({ route: { params }, navigation }) => {
           return (
             <TouchableOpacity onPress={() => scrollToActivePosition(index)}>
               <Image
-                source={{ uri: item.url }}
+                source={{ uri: item }}
                 style={{
                   width: IMAGE_SIZE,
                   height: IMAGE_SIZE,
@@ -141,46 +131,14 @@ const FullScreen = ({ route: { params }, navigation }) => {
         horizontal
         showsHorizontalScrollIndicator={false}
       />
-      <TouchableOpacity onPress={() => setIsVisible(true)} style={styles.btn}>
-        <Text
-          style={{
-            fontWeight: "600",
-            fontSize: 16,
-            color: "#797e83",
-            textAlign: "center",
-            textTransform: "uppercase",
-            paddingVertical: 12,
-          }}
-        >
-          Set as wallpaper
-        </Text>
-      </TouchableOpacity>
-      <Dialog
-        dismiss={() => setIsVisible(false)}
-        styles={styles.dialog}
-        transparent={true}
-        visible={isVisible}
-      >
-        <Text>Apply</Text>
-        <TouchableOpacity>
-          <Text>Home Screen Wallpaper</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text>Lock Screen Wallpaper</Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Text>Both</Text>
-        </TouchableOpacity>
-      </Dialog>
     </View>
   );
 };
 
-export default FullScreen;
+export default BookmarkScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: "#252a32",
     // backgroundColor: "#151a23",252a32
   },
@@ -201,23 +159,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "700",
-  },
-  btn: {
-    position: "absolute",
-    bottom: 15,
-    left: 0,
-    right: 0,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: "#222222",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dialog: {
-    height: "25%",
-    width: "80%",
-    backgroundColor: "#25292e",
-    borderRadius: 18,
-    position: "absolute",
   },
 });
